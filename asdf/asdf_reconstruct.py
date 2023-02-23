@@ -425,12 +425,32 @@ def reconstruct_ttt(
                 atc_vec = torch.Tensor([-30]).view(1,1).cuda()
             elif specs["Class"]=='stapler' or specs["Class"]=='washing_machine' or specs["Class"]=='door' or specs["Class"]=='oven':
                 atc_vec = torch.Tensor([45]).view(1,1).cuda()
+            elif specs["Class"] in ['dishwasher',
+                                    'trashcan',
+                                    'safe',
+                                    'oven',
+                                    'storagefurniture',
+                                    'table',
+                                    'microwave',
+                                    'refrigerator',
+                                    'washingmachine',
+                                    'box']:
+                atc_vec = torch.Tensor([75]).view(1,1).cuda()
             else:
                 raise Exception("Undefined classes")
         if num_atc_parts==2:
             if specs["Class"]=='eyeglasses':
                 atc_vec = torch.Tensor([25, 25]).view(1,2).cuda()
-            elif specs["Class"]=='refrigerator':
+            elif specs["Class"] in ['dishwasher',
+                                    'trashcan',
+                                    'safe',
+                                    'oven',
+                                    'storagefurniture',
+                                    'table',
+                                    'microwave',
+                                    'refrigerator',
+                                    'washingmachine',
+                                    'box']:
                 atc_vec = torch.Tensor([75, 75]).view(1,2).cuda()
             else:
                 raise Exception("Undefined classes")
@@ -480,7 +500,7 @@ def reconstruct_ttt(
         lat_vecs = lat_vec.expand(num_samples, -1)
 
         if articulation==True:
-            inputs = torch.cat([lat_vecs, xyz, atc_vecs], 1).cuda()
+            inputs = torch.cat([lat_vecs, xyz.clone(), atc_vecs], 1).cuda()
         else:
             inputs = torch.cat([lat_vecs, xyz], 1).cuda()
         if do_sup_with_part:

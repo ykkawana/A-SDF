@@ -65,7 +65,9 @@ class Decoder(nn.Module):
     def forward(self, input):
 
         xyz_atc = input[:, -(self.num_atc_parts+3):] # xyz + articulation (3+1)
-        xyz_atc[:,3:] = xyz_atc[:,3:]/100
+        xyz_atc_first = xyz_atc[:,:3]
+        xyz_atc_latter = xyz_atc[:,3:]/100
+        xyz_atc = torch.cat([xyz_atc_first, xyz_atc_latter], 1)
         xyz_atc = self.fc1(xyz_atc)
         atc_emb = self.relu(xyz_atc)
 

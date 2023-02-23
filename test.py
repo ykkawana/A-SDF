@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import pytorch_lightning as pl
+pl.seed_everything(0)
 import argparse
 import json
 import logging
