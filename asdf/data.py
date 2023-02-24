@@ -308,8 +308,7 @@ class SapienSDFSamples(torch.utils.data.Dataset):
         with open(split, 'rb') as f:
             self.pkl = pickle.load(f)
 
-        trimesh_path  = self.pkl['paths']['part_trimesh_path'].replace('/home/mil/kawana/workspace/3detr', '/home/acc12687xn/workspace/procart')
-        with open(trimesh_path, 'rb') as f:
+        with open(self.pkl['paths']['part_trimesh_path'], 'rb') as f:
             self.part_trimeshes = pickle.load(f)
 
         self.instances = self.pkl['shapes'][category]
@@ -362,7 +361,7 @@ class SapienSDFSamples(torch.utils.data.Dataset):
                 atc2 = atc[perm][0]
             else:
                 atc1 = torch.Tensor([int(art_idx / (self.art_per_instance - 1) * max_const / 5) * 5])
-                atc2 = torch.Tensor([int(1 - (art_idx / (self.art_per_instance - 1)) * max_const / 5) * 5])
+                atc2 = torch.Tensor([int((1 - art_idx / (self.art_per_instance - 1)) * max_const / 5) * 5])
             atcs = [atc1.numpy(), atc2.numpy()]
 
         points_num = self.subsample // 2
@@ -392,7 +391,7 @@ class SapienSDFSamples(torch.utils.data.Dataset):
                 tr2 = trimesh.transformations.translation_matrix(bbox['axis'] * bbox['max'] * art / max_const)
                 # arts.append(art * max_const)
             elif bbox['type'] == 0:
-                tr2 = trimesh.transformations.rotation_matrix(max_const/180 * np.pi * art, bbox['axis'], bbox['pivot'])
+                tr2 = trimesh.transformations.rotation_matrix(art/180 * np.pi, bbox['axis'], bbox['pivot'])
                 # arts.append(art * max_const)
             else:
                 tr2 = np.eye(4)
