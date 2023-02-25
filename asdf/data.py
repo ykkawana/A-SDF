@@ -307,8 +307,10 @@ class SapienSDFSamples(torch.utils.data.Dataset):
         self.art_per_instance = art_per_instance
         with open(split, 'rb') as f:
             self.pkl = pickle.load(f)
-
-        with open(self.pkl['paths']['part_trimesh_path'], 'rb') as f:
+        if os.path.abspath(__file__).startswith('/home/acc12687xn'):
+            trimesh_path  = self.pkl['paths']['part_trimesh_path'].replace('/home/mil/kawana/workspace/3detr', '/home/acc12687xn/workspace/procart')
+        with open(trimesh_path, 'rb') as f:
+        # with open(self.pkl['paths']['part_trimesh_path'], 'rb') as f:
             self.part_trimeshes = pickle.load(f)
 
         self.instances = self.pkl['shapes'][category]
