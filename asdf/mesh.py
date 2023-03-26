@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Copyright 2004-present Facebook. All Rights Reserved.
 
+import trimesh
+import tempfile
 import logging
 import numpy as np
 import plyfile
@@ -13,6 +15,7 @@ import asdf.utils
 
 def create_mesh(
     decoder, lat_vec, filename, N=256, max_batch=32 ** 3, offset=None, scale=None, atc_vec=None, do_sup_with_part=False, specs=None,
+    return_mesh=False,
 ):
     start = time.time()
     ply_filename = filename
@@ -67,20 +70,23 @@ def create_mesh(
 
     sdf_values = samples[:, 3]
     sdf_values = sdf_values.reshape(N, N, N)
-    print("max and min pred: ", torch.max(sdf_values).item(), torch.min(sdf_values).item())
+    # print("max and min pred: ", torch.max(sdf_values).item(), torch.min(sdf_values).item())
 
     end = time.time()
-    print("sampling takes: %f" % (end - start))
+    # print("sampling takes: %f" % (end - start))
 
-    convert_sdf_samples_to_ply(
+    m = convert_sdf_samples_to_ply(
         sdf_values.data.cpu(),
         voxel_origin,
         voxel_size,
-        ply_filename + ".ply",
+        ply_filename + ".ply" if isinstance(ply_filename, str) else '',
         offset,
         scale,
         specs=specs,
+        return_mesh=return_mesh,
     )
+    if return_mesh:
+        return m
 
 
 def convert_sdf_samples_to_ply(
@@ -91,11 +97,13 @@ def convert_sdf_samples_to_ply(
     offset=None,
     scale=None,
     specs=None,
+    return_mesh=False,
 ):
     """
     Convert sdf samples to .ply
 
     :param pytorch_3d_sdf_tensor: a torch.FloatTensor of shape (n,n,n)
+    
     :voxel_grid_origin: a list of three floats: the bottom, left, down origin of the voxel grid
     :voxel_size: float, the size of the voxels
     :ply_filename_out: string, path of the filename to save to
@@ -106,9 +114,12 @@ def convert_sdf_samples_to_ply(
 
     numpy_3d_sdf_tensor = pytorch_3d_sdf_tensor.numpy()
 
-    verts, faces, normals, values = skimage.measure.marching_cubes(
-        numpy_3d_sdf_tensor, level=0.0, spacing=[voxel_size] * 3
-    )
+    if numpy_3d_sdf_tensor.min() <= 0.0 <= numpy_3d_sdf_tensor.max():
+        verts, faces, normals, values = skimage.measure.marching_cubes(
+            numpy_3d_sdf_tensor, level=0.0, spacing=[voxel_size] * 3
+        )
+    else:
+        return None
 
     # transform from voxel coordinates to camera coordinates
     # note x and y are flipped in the output of marching_cubes
@@ -143,7 +154,13 @@ def convert_sdf_samples_to_ply(
 
     ply_data = plyfile.PlyData([el_verts, el_faces])
     logging.debug("saving mesh to %s" % (ply_filename_out))
-    ply_data.write(ply_filename_out)
+    if return_mesh:
+        with tempfile.NamedTemporaryFile(suffix='.ply') as f:
+            ply_data.write(f.name)
+            mesh = trimesh.load(f.name)
+        return mesh
+    else:
+        ply_data.write(ply_filename_out)
 
     logging.debug(
         "converting to ply format and writing to file took {} s".format(

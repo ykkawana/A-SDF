@@ -300,6 +300,7 @@ class SapienSDFSamples(torch.utils.data.Dataset):
         art_per_instance=1,
         fixed_articulation_type=None,
     ):
+
         self.subsample = subsample
 
         self.data_source = data_source
@@ -309,16 +310,21 @@ class SapienSDFSamples(torch.utils.data.Dataset):
             self.pkl = pickle.load(f)
         if os.path.abspath(__file__).startswith('/home/acc12687xn'):
             trimesh_path  = self.pkl['paths']['part_trimesh_path'].replace('/home/mil/kawana/workspace/3detr', '/home/acc12687xn/workspace/procart')
+        else:
+            trimesh_path  = self.pkl['paths']['part_trimesh_path']
         with open(trimesh_path, 'rb') as f:
         # with open(self.pkl['paths']['part_trimesh_path'], 'rb') as f:
             self.part_trimeshes = pickle.load(f)
 
         self.instances = self.pkl['shapes'][category]
-        self.keys = list(self.instances.keys())
+        keys = list(self.instances.keys())
+
+        self.num_atc_parts = num_atc_parts
+        self.keys = [k for k in keys if len(self.instances[k]['bboxes'])==self.num_atc_parts + 1]
+
         self.instance_len = len(self.keys)
         self.dataset_len = self.instance_len * art_per_instance
         self.articualtion = articulation
-        self.num_atc_parts = num_atc_parts
         self.fixed_articulation_type = fixed_articulation_type
 
         self.sdfs_cache = {}
@@ -335,6 +341,7 @@ class SapienSDFSamples(torch.utils.data.Dataset):
         return self.dataset_len
 
     def __getitem__(self, idx):
+        assert os.environ['OMP_NUM_THREADS'] == '1'
         instance_idx = idx % self.instance_len
         art_idx = idx % self.art_per_instance
 
@@ -365,6 +372,33 @@ class SapienSDFSamples(torch.utils.data.Dataset):
                 atc1 = torch.Tensor([int(art_idx / (self.art_per_instance - 1) * max_const / 5) * 5])
                 atc2 = torch.Tensor([int((1 - art_idx / (self.art_per_instance - 1)) * max_const / 5) * 5])
             atcs = [atc1.numpy(), atc2.numpy()]
+
+        if self.num_atc_parts==4:
+            if self.fixed_articulation_type is None:
+            #     atc1 = torch.rand(1) * max_const
+            #     atc2 = torch.rand(1) * max_const
+            # elif self.fixed_articulation_type is 'discrete':
+                atc = torch.Tensor(list(range(0, 140, 5)))
+                perm = torch.randperm(len(atc))
+                atc1 = atc[perm][0]
+                atc = torch.Tensor(list(range(0, 140, 5)))
+                perm = torch.randperm(len(atc))
+                atc2 = atc[perm][0]
+
+                atc = torch.Tensor(list(range(0, 140, 5)))
+                perm = torch.randperm(len(atc))
+                atc3 = atc[perm][0]
+                atc = torch.Tensor(list(range(0, 140, 5)))
+                perm = torch.randperm(len(atc))
+                atc4 = atc[perm][0]
+            else:
+                atc1 = torch.Tensor([int(art_idx / (self.art_per_instance - 1) * max_const / 5) * 5])
+                atc2 = torch.Tensor([int((1 - art_idx / (self.art_per_instance - 1)) * max_const / 5) * 5])
+                atc3 = torch.Tensor([int(art_idx / (self.art_per_instance - 1) * max_const / 5) * 5])
+                atc4 = torch.Tensor([int((1 - art_idx / (self.art_per_instance - 1)) * max_const / 5) * 5])
+            atcs = [atc1.numpy(), atc2.numpy(), atc3.numpy(), atc4.numpy()]
+
+
 
         points_num = self.subsample // 2
         sample_num = points_num * 4
@@ -460,4 +494,6 @@ class SapienSDFSamples(torch.utils.data.Dataset):
             return (samples, atc, instance_idx+1), idx
         if self.num_atc_parts==2:
             return (samples, torch.Tensor([atc1, atc2]), instance_idx+1), idx
+        if self.num_atc_parts==4:
+            return (samples, torch.Tensor([atc1, atc2, atc3, atc4]), instance_idx+1), idx
 

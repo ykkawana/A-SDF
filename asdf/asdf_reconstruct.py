@@ -252,6 +252,7 @@ def reconstruct(
     num_atc_parts=1,
     do_sup_with_part=False,
 ):
+    assert False
     def adjust_learning_rate(
         initial_lr, optimizer, num_iterations, decreased_by, adjust_lr_every
     ):
@@ -421,39 +422,41 @@ def reconstruct_ttt(
     # init articulation code optimizer
     if infer_with_gt_atc==False:
         if num_atc_parts==1:
-            if specs["Class"]=='laptop':
-                atc_vec = torch.Tensor([-30]).view(1,1).cuda()
-            elif specs["Class"]=='stapler' or specs["Class"]=='washing_machine' or specs["Class"]=='door' or specs["Class"]=='oven':
-                atc_vec = torch.Tensor([45]).view(1,1).cuda()
-            elif specs["Class"] in ['dishwasher',
-                                    'trashcan',
-                                    'safe',
-                                    'oven',
-                                    'storagefurniture',
-                                    'table',
-                                    'microwave',
-                                    'refrigerator',
-                                    'washingmachine',
-                                    'box']:
-                atc_vec = torch.Tensor([75]).view(1,1).cuda()
-            else:
-                raise Exception("Undefined classes")
+            # if specs["Class"]=='laptop':
+            #     atc_vec = torch.Tensor([-30]).view(1,1).cuda()
+            # elif specs["Class"]=='stapler' or specs["Class"]=='washing_machine' or specs["Class"]=='door' or specs["Class"]=='oven':
+            #     atc_vec = torch.Tensor([45]).view(1,1).cuda()
+            # elif specs["Class"] in ['dishwasher',
+            #                         'trashcan',
+            #                         'safe',
+            #                         'oven',
+            #                         'storagefurniture',
+            #                         'table',
+            #                         'microwave',
+            #                         'refrigerator',
+            #                         'washingmachine',
+            #                         'box']:
+            atc_vec = torch.Tensor([75]).view(1,1).cuda()
+            # else:
+            #     raise Exception("Undefined classes")
         if num_atc_parts==2:
-            if specs["Class"]=='eyeglasses':
-                atc_vec = torch.Tensor([25, 25]).view(1,2).cuda()
-            elif specs["Class"] in ['dishwasher',
-                                    'trashcan',
-                                    'safe',
-                                    'oven',
-                                    'storagefurniture',
-                                    'table',
-                                    'microwave',
-                                    'refrigerator',
-                                    'washingmachine',
-                                    'box']:
-                atc_vec = torch.Tensor([75, 75]).view(1,2).cuda()
-            else:
-                raise Exception("Undefined classes")
+            # if specs["Class"]=='eyeglasses':
+            #     atc_vec = torch.Tensor([25, 25]).view(1,2).cuda()
+            # elif specs["Class"] in ['dishwasher',
+            #                         'trashcan',
+            #                         'safe',
+            #                         'oven',
+            #                         'storagefurniture',
+            #                         'table',
+            #                         'microwave',
+            #                         'refrigerator',
+            #                         'washingmachine',
+            #                         'box']:
+            atc_vec = torch.Tensor([75, 75]).view(1,2).cuda()
+        if num_atc_parts==4:
+            atc_vec = torch.Tensor([75, 75, 75, 75]).view(1,4).cuda()
+            # else:
+            #     raise Exception("Undefined classes")
         atc_vec.requires_grad = True
         atc_optimizer = torch.optim.Adam([atc_vec], lr=1000*lr)
 
@@ -538,7 +541,7 @@ def reconstruct_ttt(
         else:
             # computer angle pred acc
             atc_err = torch.mean(torch.abs(atc_vec.detach() - sdf_data[1].cuda())).cpu().data.numpy()
-            print(atc_vec)
+            # print(atc_vec)
             return loss_num, atc_err, lat_vec, atc_vec
 
     else:
@@ -810,6 +813,7 @@ def reconstruct_testset_ttt(args, ws, specs, decoder, npz_filenames, saved_model
 
 
 def generation(args, ws, specs, decoder, reconstruction_codes_dir, saved_model_epoch, dataset_name='shape2motion'):
+    assert False
     
     # build saving directory
     generation_dir = os.path.join(
@@ -880,6 +884,7 @@ def generation(args, ws, specs, decoder, reconstruction_codes_dir, saved_model_e
 
 
 def generation_ttt(args, ws, specs, decoder, reconstruction_codes_dir, reconstruction_models_dir, saved_model_epoch, dataset_name='shape2motion'):
+    assert False
     
     # build saving directory
     generation_dir = os.path.join(
@@ -953,6 +958,7 @@ def generation_ttt(args, ws, specs, decoder, reconstruction_codes_dir, reconstru
 
 
 def interpolate_testset(args, ws, specs, decoder, reconstruction_codes_dir, saved_model_epoch, dataset_name='shape2motion'):
+    assert False
 
     # build saving directory
     inter_dir = os.path.join(
